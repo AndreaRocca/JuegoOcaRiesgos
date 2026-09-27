@@ -42,7 +42,7 @@ Temas: ciudadania_digital, informacion_sensible, phishing, ciberbullying, groomi
 
 Correcta: A/B/C. Dificultad: facil/media/dificil (acepta tildes e intermedia). Consecuencias: 1 retrocede una; 2 retrocede dos; 3 pierde turno; 4 vuelve al origen del tiro; 5 rebote al siguiente equipo; 6 segunda oportunidad.
 
-Se verifican columnas, campos completos, IDs únicos, opciones diferentes, valores permitidos y dos preguntas por cada tema. Límite: 2 MB, 1000 preguntas y 4000 caracteres por campo. Las 24 fichas son una consigna del curso, no un límite del juego. Los errores señalan la línea física donde empieza la fila del CSV. Se admiten campos con comas, comillas escapadas y saltos de línea.
+Se verifican columnas, campos completos, IDs únicos, opciones diferentes, valores permitidos y dos preguntas por cada tema. Límite: 2 MB, 1000 preguntas y 4000 caracteres por campo. La consigna es elaborar al menos 14 preguntas entre toda la clase, dos por cada uno de los siete temas, individualmente o en parejas. Se pueden agregar más. El juego incorpora todas las preguntas válidas y las elige al azar por categoría, sin repetir hasta agotar las disponibles de ese tema; una partida no necesariamente muestra todas. Los errores señalan la línea física donde empieza la fila del CSV. Se admiten campos con comas, comillas escapadas y saltos de línea.
 
 La carga es local: no envía el CSV a ningún servidor ni modifica el repositorio. «Nueva partida» conserva el banco; recargar la página vuelve a los ejemplos. «Usar ejemplos» permite restaurarlos antes de jugar. El PDF es para papel; no se convierte automáticamente.
 
