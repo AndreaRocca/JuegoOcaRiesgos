@@ -2,6 +2,31 @@
 const $ = id => document.getElementById(id);
 const FIN = 29;
 const COLORES = ['#713eb4','#26784c','#b95620','#246ca2','#a83369','#626125'];
+const FICHAS = [
+ ['🎮','Joystick'],['🚀','Cohete'],['🦊','Zorro'],['👾','Alien'],
+ ['🎧','Auriculares'],['⚡','Rayo'],['🐱','Gato'],['🐉','Dragón'],
+ ['🛹','Skate'],['🌈','Arcoíris'],['🔥','Fuego'],['🤖','Robot']
+];
+const seleccionFichas = [0,1,2,3,4,5];
+function nombresConfigurados(){return $('names').value.split('\n').map(n=>n.trim()).filter(Boolean);}
+function configurarFichas(){
+ $('token-pickers').replaceChildren();
+ nombresConfigurados().slice(0,6).forEach((name,i)=>{
+  const label=texto('label',name);const select=document.createElement('select');
+  select.setAttribute('aria-label',`Ficha de ${name}`);
+  FICHAS.forEach(([emoji,nombre],j)=>{const option=texto('option',`${emoji} ${nombre}`);option.value=String(j);select.append(option);});
+  select.value=String(seleccionFichas[i]);
+  select.addEventListener('change',()=>{seleccionFichas[i]=Number(select.value);});
+  label.append(select);$('token-pickers').append(label);
+ });
+}
+function fichaEquipo(team,i){
+ const token=texto('span',FICHAS[team.ficha][0],'token');
+ token.style.setProperty('--team',COLORES[i]);
+ token.title=`${team.nombre} · ${FICHAS[team.ficha][1]}`;
+ token.setAttribute('role','img');token.setAttribute('aria-label',token.title);
+ return token;
+}
 const EFECTOS = {back1:'Retroceder 1 casilla',back2:'Retroceder 2 casillas',skip:'Perder un turno',return:'Volver a la posición anterior',rebound:'Rebote al siguiente equipo',retry:'Otra pregunta para conservar la casilla'};
 let equipos=[], turno=0, anterior=0, modo='question', fase='setup', pregunta=null, tipo='normal', efecto='', siguiente=null;
 const usadas = new Map();
@@ -14,9 +39,9 @@ function render(){
  for(let row=0;row<5;row++){const numbers=Array.from({length:6},(_,i)=>row*6+i);if(row%2)numbers.reverse();for(const n of numbers){
   const cat=CATEGORIAS[categoria(n)];const cell=texto('div','', 'cell');cell.style.setProperty('--tile',n===0||n===FIN?'#23583f':cat.color);if(n===0||n===FIN)cell.style.color='white';
   cell.append(texto('span',n===0?'↗':n===FIN?'★':String(n),'cell-number'),texto('span',row%2?'←':'→','cell-arrow'),texto('span',n===0?'SALIDA':n===FIN?'META':cat.nombre,'cell-name'));
-  const tokens=texto('div','','tokens');equipos.forEach((t,i)=>{if(t.pos===n){const token=texto('span',String(i+1),'token');token.style.setProperty('--team',COLORES[i]);token.title=t.nombre;token.setAttribute('aria-label',t.nombre);tokens.append(token);}});cell.append(tokens);$('board').append(cell);
+  const tokens=texto('div','','tokens');equipos.forEach((t,i)=>{if(t.pos===n)tokens.append(fichaEquipo(t,i));});cell.append(tokens);$('board').append(cell);
  }}
- $('teams').replaceChildren();equipos.forEach((t,i)=>{const row=texto('div','',`team-row${turno===i?' active':''}`);const token=texto('span',String(i+1),'token');token.style.setProperty('--team',COLORES[i]);row.append(token,texto('span',t.nombre),texto('small',`${t.pos}/${FIN}${t.skip?' · pausa':''}`));$('teams').append(row);});
+ $('teams').replaceChildren();equipos.forEach((t,i)=>{const row=texto('div','',`team-row${turno===i?' active':''}`);row.append(fichaEquipo(t,i),texto('span',t.nombre),texto('small',`${t.pos}/${FIN}${t.skip?' · pausa':''}`));$('teams').append(row);});
  $('turn').textContent=fase==='won'?`¡Ganó ${equipos[turno].nombre}!`:`Turno de ${equipos[turno].nombre}`;
  $('roll').disabled=fase!=='roll';
 }
@@ -52,8 +77,10 @@ function responder(index){
  $('feedback').hidden=false;$('continue').hidden=false;$('continue').textContent=siguiente?'Seguir con el desafío →':fase==='won'?'Ver resultado →':'Siguiente turno →';render();$('continue').focus();
 }
 function avanzarTurno(){const skipped=[];do{turno=(turno+1)%equipos.length;if(!equipos[turno].skip)break;equipos[turno].skip--;skipped.push(equipos[turno].nombre);}while(true);fase='roll';$('status').textContent=skipped.length?`${skipped.join(', ')} pierde su turno. Ahora juega ${equipos[turno].nombre}.`:'Conversen antes de elegir una respuesta.';render();$('roll').focus();}
-function iniciar(names,penalty){equipos=names.map(nombre=>({nombre,pos:0,skip:0}));turno=0;modo=penalty;fase='roll';usadas.clear();$('setup').hidden=true;$('game').hidden=false;$('dice').textContent='?';$('dice').setAttribute('aria-label','Dado sin tirar');$('status').textContent='¡Todo listo! Tiren el dado para empezar.';render();$('roll').focus();}
-$('setup-form').addEventListener('submit',event=>{event.preventDefault();const names=$('names').value.split('\n').map(n=>n.trim()).filter(Boolean);if(names.length<2||names.length>6||names.some(n=>n.length>25)||new Set(names.map(n=>n.toLowerCase())).size!==names.length){$('setup-error').textContent='Escribí entre 2 y 6 nombres distintos, de hasta 25 caracteres cada uno.';return;}$('setup-error').textContent='';iniciar(names,$('penalty').value);});
+function iniciar(names,penalty){equipos=names.map((nombre,i)=>({nombre,ficha:seleccionFichas[i],pos:0,skip:0}));turno=0;modo=penalty;fase='roll';usadas.clear();$('setup').hidden=true;$('game').hidden=false;$('dice').textContent='?';$('dice').setAttribute('aria-label','Dado sin tirar');$('status').textContent='¡Todo listo! Tiren el dado para empezar.';render();$('roll').focus();}
+$('names').addEventListener('input',configurarFichas);
+configurarFichas();
+$('setup-form').addEventListener('submit',event=>{event.preventDefault();const names=nombresConfigurados();if(names.length<2||names.length>6||names.some(n=>n.length>25)||new Set(names.map(n=>n.toLowerCase())).size!==names.length){$('setup-error').textContent='Escribí entre 2 y 6 nombres distintos, de hasta 25 caracteres cada uno.';return;}if(new Set(seleccionFichas.slice(0,names.length)).size!==names.length){$('setup-error').textContent='Elijan un emoji diferente para cada equipo, así pueden reconocer sus fichas.';return;}$('setup-error').textContent='';iniciar(names,$('penalty').value);});
 $('roll').addEventListener('click',()=>{if(fase!=='roll')return;fase='question';const n=Math.floor(Math.random()*6)+1;anterior=equipos[turno].pos;equipos[turno].pos=Math.min(FIN,anterior+n);$('dice').textContent=String(n);$('dice').setAttribute('aria-label',`Resultado del dado: ${n}`);$('status').textContent=`Salió ${n}. ${equipos[turno].nombre} pasa de ${anterior} a ${equipos[turno].pos}.`;abrir(elegir(categoria(equipos[turno].pos)));});
 $('continue').addEventListener('click',()=>{if(fase!=='feedback'&&fase!=='won')return;if(siguiente){const action=siguiente;siguiente=null;action();return;}$('question-dialog').close();if(fase==='won'){$('status').textContent='¡Recorrido completo! Pueden iniciar otra partida.';render();$('reset').focus();return;}avanzarTurno();});
 $('question-dialog').addEventListener('cancel',e=>e.preventDefault());

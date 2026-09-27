@@ -13,7 +13,7 @@ Abrí `index.html` en un navegador moderno. Escribí entre 2 y 6 nombres de equi
 3. En **Settings → Pages**, elegí **Deploy from a branch**, la rama `main` y la carpeta `/ (root)`. Guardá.
 4. Cuando finalice la publicación, abrí la dirección que muestra GitHub Pages.
 
-Los recursos usan rutas relativas, por lo que funcionan dentro del subdirectorio del repositorio. Esta entrega está preparada para publicar; todavía no está subida a GitHub.
+Los recursos usan rutas relativas, por lo que funcionan dentro del subdirectorio del repositorio. Juego publicado: https://andrearocca.github.io/JuegoOcaRiesgos/
 
 ## Reglas de esta versión
 
@@ -79,3 +79,15 @@ Las consecuencias solo pertenecen al juego. Nunca implican culpabilizar a quiene
 - `app.js`: turnos, dado, consecuencias y resultado.
 
 La configuración docente se realiza al iniciar. Esta versión no incluye editor visual de preguntas, guardado de partidas ni juego remoto entre dispositivos.
+
+## Autoría y licencia
+
+Autoría: **Andrea Rocca**. Oca en red se comparte bajo **Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)**. Podés compartir y adaptar el material dando crédito, enlazando la licencia e indicando cambios, sin fines comerciales y distribuyendo las adaptaciones con la misma licencia.
+
+[Resumen de la licencia](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es) · [Texto legal](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.es) · [Aviso de licencia](LICENSE.md)
+
+Atribución sugerida: «Oca en red, de Andrea Rocca — CC BY-NC-SA 4.0 — https://andrearocca.github.io/JuegoOcaRiesgos/». Si realizás cambios, indicá cuáles.
+
+## Fichas con emojis
+
+Al escribir los nombres aparecen los selectores de fichas. Cada equipo elige uno de los 12 emojis; no se permiten fichas repetidas en una misma partida. El emoji acompaña al equipo tanto en el tablero como en la lista de posiciones. Los lectores de pantalla reciben el nombre del equipo y de la ficha. Los emojis se muestran con las fuentes del dispositivo y pueden variar de aspecto.
