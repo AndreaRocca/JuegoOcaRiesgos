@@ -30,40 +30,25 @@ Los recursos usan rutas relativas, por lo que funcionan dentro del subdirectorio
 
 ## Cargar preguntas de estudiantes
 
-Editá `preguntas.js`. Cada objeto del arreglo `PREGUNTAS` tiene este formato:
+1. Revisá las fichas en papel con la docente antes de digitalizarlas.
+2. Descargá plantilla-preguntas.csv desde el juego. Incluye 14 ejemplos válidos, dos por tema. Reemplazalos por tus preguntas aprobadas.
+3. Exportá como CSV UTF-8 (coma o punto y coma). En Google Forms/Sheets, conservá solo las columnas de la plantilla y las filas aprobadas.
+4. Antes de empezar la partida, pulsá «Cargar mis preguntas (CSV)» y seleccioná el archivo.
+5. Si el banco es válido se reemplaza completo. Si no, se indican líneas y correcciones y se conserva el banco anterior.
 
-```js
-{
-  categoria: 0,
-  situacion: 'Situación concreta y pregunta para decidir qué hacer.',
-  opciones: ['Respuesta A', 'Respuesta B', 'Respuesta C'],
-  correcta: 1,
-  explicacion: 'Por qué B es la mejor respuesta.',
-  consecuencia: 'back1',
-  dificultad: 'Intermedia'
-}
-```
+Columnas obligatorias (el orden puede variar): id, tema, situacion, pregunta, opcionA, opcionB, opcionC, correcta, explicacion, consecuencia, dificultad.
 
-`correcta`: 0 = A, 1 = B, 2 = C. Separá los objetos con comas. Mantené **al menos dos preguntas por categoría** para permitir una segunda oportunidad distinta.
+Temas: ciudadania_digital, informacion_sensible, phishing, ciberbullying, grooming, fake_news_ia, ludopatia.
 
-| Categoría | Número |
-|---|---|
-| Ciudadanía digital | 0 |
-| Información sensible | 1 |
-| Phishing | 2 |
-| Ciberbullying | 3 |
-| Grooming | 4 |
-| Fake news / IA | 5 |
-| Ludopatía adolescente | 6 |
+Correcta: A/B/C. Dificultad: facil/media/dificil (acepta tildes e intermedia). Consecuencias: 1 retrocede una; 2 retrocede dos; 3 pierde turno; 4 vuelve al origen del tiro; 5 rebote al siguiente equipo; 6 segunda oportunidad.
 
-| Consecuencia | Valor |
-|---|---|
-| Retroceder 1 | `back1` |
-| Retroceder 2 | `back2` |
-| Perder un turno | `skip` |
-| Volver a la posición anterior | `return` |
-| Rebote | `rebound` |
-| Segunda oportunidad | `retry` |
+Se verifican columnas, campos completos, IDs únicos, opciones diferentes, valores permitidos y dos preguntas por cada tema. Límite: 2 MB, 1000 preguntas y 4000 caracteres por campo. Las 24 fichas son una consigna del curso, no un límite del juego. Los errores señalan la línea física donde empieza la fila del CSV. Se admiten campos con comas, comillas escapadas y saltos de línea.
+
+La carga es local: no envía el CSV a ningún servidor ni modifica el repositorio. «Nueva partida» conserva el banco; recargar la página vuelve a los ejemplos. «Usar ejemplos» permite restaurarlos antes de jugar. El PDF es para papel; no se convierte automáticamente.
+
+### Arquitectura
+
+cargarPreguntas.js ofrece BancoCSV.cargarPreguntas(fuente), que recibe un File local o una URL y devuelve {preguntas, cuenta, errores}. No modifica el estado del juego. app.js solo reemplaza su banco activo al obtener un resultado válido. Los ejemplos siguen separados en preguntas.js; la plantilla CSV es su versión editable. Una futura fuente externa puede usar este adaptador (sujeta a CORS) sin cambiar las reglas.
 
 ## Criterio pedagógico
 

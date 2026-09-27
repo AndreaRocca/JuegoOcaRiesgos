@@ -1,6 +1,8 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const FIN = 29;
+let bancoPreguntas=PREGUNTAS;
+let cargandoBanco=false;
 const ICONOS = ['🤝','🔒','🪝','💬','🛡️','🔎','🎰'];
 const COLORES = ['#713eb4','#26784c','#b95620','#246ca2','#a83369','#626125'];
 const FICHAS = [
@@ -33,7 +35,7 @@ let equipos=[], turno=0, anterior=0, modo='question', fase='setup', pregunta=nul
 const usadas = new Map();
 function texto(tag, value, className){const el=document.createElement(tag);el.textContent=value;if(className)el.className=className;return el;}
 function categoria(pos){return (pos-1+7)%7;}
-function elegir(cat, excluir){let pool=PREGUNTAS.filter(p=>p.categoria===cat&&p!==excluir);let seen=usadas.get(cat)||new Set();let available=pool.filter(p=>!seen.has(p));if(!available.length){seen=new Set();available=pool;}const q=available[Math.floor(Math.random()*available.length)];seen.add(q);usadas.set(cat,seen);return q;}
+function elegir(cat, excluir){let pool=bancoPreguntas.filter(p=>p.categoria===cat&&p!==excluir);let seen=usadas.get(cat)||new Set();let available=pool.filter(p=>!seen.has(p));if(!available.length){seen=new Set();available=pool;}const q=available[Math.floor(Math.random()*available.length)];seen.add(q);usadas.set(cat,seen);return q;}
 function render(){
  $('board').replaceChildren();
  // Filas alternadas: el recorrido serpentea sin saltar entre extremos.
@@ -55,7 +57,7 @@ function abrir(q,variant='normal'){
  pregunta=q;tipo=variant;fase='question';siguiente=null;
  $('question-dialog').style.setProperty('--category',CATEGORIAS[q.categoria].color);
  $('question-category').textContent=`${CATEGORIAS[q.categoria].nombre} · ${q.dificultad}`;
- $('question-title').textContent=q.situacion;
+ $('question-title').textContent=q.pregunta?`${q.situacion} ${q.pregunta}`:q.situacion;
  const respondent=variant==='rebound'?(turno+1)%equipos.length:turno;
  $('question-team').textContent=`Responde ${equipos[respondent].nombre}${variant==='retry'?' · Segunda oportunidad':variant==='rebound'?' · Rebote':''}`;
  efecto=modo==='question'?q.consecuencia:modo;
@@ -87,7 +89,7 @@ function avanzarTurno(){const skipped=[];do{turno=(turno+1)%equipos.length;if(!e
 function iniciar(names,penalty){equipos=names.map((nombre,i)=>({nombre,ficha:seleccionFichas[i],pos:0,skip:0}));turno=0;modo=penalty;fase='roll';usadas.clear();$('setup').hidden=true;$('game').hidden=false;$('dice').textContent='?';$('dice').setAttribute('aria-label','Dado sin tirar');$('status').textContent='¡Todo listo! Tiren el dado para empezar.';render();$('roll').focus();}
 $('names').addEventListener('input',configurarFichas);
 configurarFichas();
-$('setup-form').addEventListener('submit',event=>{event.preventDefault();const names=nombresConfigurados();if(names.length<2||names.length>6||names.some(n=>n.length>25)||new Set(names.map(n=>n.toLowerCase())).size!==names.length){$('setup-error').textContent='Escribí entre 2 y 6 nombres distintos, de hasta 25 caracteres cada uno.';return;}if(new Set(seleccionFichas.slice(0,names.length)).size!==names.length){$('setup-error').textContent='Elijan un emoji diferente para cada equipo, así pueden reconocer sus fichas.';return;}$('setup-error').textContent='';iniciar(names,$('penalty').value);});
+$('setup-form').addEventListener('submit',event=>{event.preventDefault();if(cargandoBanco)return;const names=nombresConfigurados();if(names.length<2||names.length>6||names.some(n=>n.length>25)||new Set(names.map(n=>n.toLowerCase())).size!==names.length){$('setup-error').textContent='Escribí entre 2 y 6 nombres distintos, de hasta 25 caracteres cada uno.';return;}if(new Set(seleccionFichas.slice(0,names.length)).size!==names.length){$('setup-error').textContent='Elijan un emoji diferente para cada equipo, así pueden reconocer sus fichas.';return;}$('setup-error').textContent='';iniciar(names,$('penalty').value);});
 $('roll').addEventListener('click',()=>{if(fase!=='roll')return;fase='question';const n=Math.floor(Math.random()*6)+1;anterior=equipos[turno].pos;equipos[turno].pos=Math.min(FIN,anterior+n);$('dice').textContent=String(n);$('dice').setAttribute('aria-label',`Resultado del dado: ${n}`);$('status').textContent=`Salió ${n}. ${equipos[turno].nombre} pasa de ${anterior} a ${equipos[turno].pos}.`;abrir(elegir(categoria(equipos[turno].pos)));});
 $('continue').addEventListener('click',()=>{if(fase!=='feedback'&&fase!=='won')return;if(siguiente){const action=siguiente;siguiente=null;action();return;}$('question-dialog').close();if(fase==='won'){$('status').textContent='¡Recorrido completo! Pueden iniciar otra partida.';render();$('reset').focus();return;}avanzarTurno();});
 $('question-dialog').addEventListener('cancel',e=>e.preventDefault());
@@ -95,3 +97,19 @@ $('reset').addEventListener('click',()=>{$('reset-confirm').hidden=false;});
 $('reset-no').addEventListener('click',()=>{$('reset-confirm').hidden=true;});
 $('reset-yes').addEventListener('click',()=>{fase='setup';document.body.classList.remove('playing','finished');$('reset-confirm').hidden=true;$('game').hidden=true;$('setup').hidden=false;$('names').focus();});
 for(const cat of CATEGORIAS){const el=texto('span',cat.nombre);el.style.setProperty('--tile',cat.color);$('legend').append(el);}
+
+function estadoBanco(nombre){
+ $('bank-status').textContent=nombre+' · '+bancoPreguntas.length+' preguntas. '+CATEGORIAS.map((c,i)=>c.nombre+': '+bancoPreguntas.filter(q=>q.categoria===i).length).join(' · ');
+}
+function bloquearCarga(valor){cargandoBanco=valor;$('load-csv').disabled=valor;$('default-bank').disabled=valor;$('start-game').disabled=valor;}
+$('load-csv').addEventListener('click',()=>{if(fase==='setup'&&!cargandoBanco)$('csv-file').click();});
+$('csv-file').addEventListener('change',async()=>{
+ const file=$('csv-file').files[0];if(!file||fase!=='setup')return;
+ bloquearCarga(true);$('csv-errors').replaceChildren();$('csv-message').textContent='Revisando el archivo…';
+ const resultado=await BancoCSV.cargarPreguntas(file);
+ if(resultado.errores.length){$('csv-message').textContent='No se cambió el banco. Corregí estos errores y volvé a cargar el archivo:';resultado.errores.slice(0,100).forEach(e=>$('csv-errors').append(texto('li',e)));if(resultado.errores.length>100)$('csv-errors').append(texto('li','Se muestran los primeros 100 errores. Corregilos y volvé a intentar.'));}
+ else {bancoPreguntas=resultado.preguntas;usadas.clear();estadoBanco('Archivo: '+file.name);$('csv-message').textContent='Archivo válido. Las preguntas del CSV reemplazaron por completo a los ejemplos. Ya pueden jugar.';}
+ $('csv-file').value='';bloquearCarga(false);
+});
+$('default-bank').addEventListener('click',()=>{if(fase!=='setup'||cargandoBanco)return;bancoPreguntas=PREGUNTAS;usadas.clear();estadoBanco('Banco de ejemplo');$('csv-errors').replaceChildren();$('csv-message').textContent='Se restauraron las preguntas de ejemplo.';});
+estadoBanco('Banco de ejemplo');
